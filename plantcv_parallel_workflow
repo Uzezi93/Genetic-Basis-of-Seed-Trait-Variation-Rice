@@ -1,0 +1,7 @@
+
+# Plantcv parallel workflow 
+
+plantcv-workflow.py --config config.json
+
+# Convert Result.json to csv format
+plantcv-utils.py json2csv -j output.json -c result-table 
