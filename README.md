@@ -1,3 +1,3 @@
-# Uzezi-PhD-Projects
+# Rice seed Phenotyping
 
-Analysis pipeline for my PhD projects. 
+Analysis pipeline for Rice seed Phenotyping. 
