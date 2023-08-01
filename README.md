@@ -1,3 +1,3 @@
 # Uzezi-PhD-Projects
 
-Python pipeline for Rice seed phenotyping. 
+Analysis pipeline for my PhD projects. 
