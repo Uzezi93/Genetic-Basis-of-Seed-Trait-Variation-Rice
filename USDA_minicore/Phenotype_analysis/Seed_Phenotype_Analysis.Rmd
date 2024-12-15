@@ -1,0 +1,668 @@
+---
+title: Statistical analysis of seed traits measured within the USDA rice minicore
+  accessions
+author: "Uzezi Okinedo"
+date: "8/14/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load packages}
+.libPaths("/home/uzezi_okinedo001_umb_edu/R/x86_64-pc-linux-gnu-library/4.2")
+
+require(tidyverse)
+require(stringr)
+require(data.table)
+require(ggplot2)
+require(plyr)
+require(dplyr)
+require(tidyr)
+require(dlookr)
+require(tibble)
+require(reshape2)
+require(gridExtra)
+require(grid)
+require(ggfortify)
+require(Hmisc)
+require(GGally)
+require(ggstatsplot)
+require(nortest)
+require(lsmeans)
+require(rstatix)
+require(ggcorrplot)
+require(sommer)
+require(data.table)
+require(ggpubr)
+require(rMVP)
+require(emmeans)
+require(ggsignif)
+require(adegenet)
+require(pcadapt)
+require(Matrix)
+require(multcompView)
+```
+
+## Convert pixels to mm
+
+```{r convertion pixels to mm}
+
+#Load the phenotypic measurements obtained with the PlantCV pipeline
+geno.all <- read.csv("result1-table-single-value-traits.csv")
+
+geno.all$object_in_frame <- NULL
+
+na.omit(geno.all)
+
+#let's select the colummn that we need and convert pixels to mm based on the convertion factor for images with a 300 dpi resolution
+
+geno.all.clean <- geno.all %>%
+  dplyr::select(measurementlabel, sample, timestamp, filename, ellipse_eccentricity, ellipse_minor_axis, ellipse_major_axis, convex_hull_area, perimeter, solidity, area, longest_path, convex_hull_vertices) %>%
+  mutate(Area = area *0.085,
+         CH.Area = convex_hull_area * 0.085,
+         Perimeter = perimeter * 0.085,
+         Longest.Path = longest_path * 0.085,
+         Major.Axis = ellipse_major_axis * 0.085,
+         Minor.Axis = ellipse_minor_axis * 0.085) 
+
+geno.all.clean <- geno.all.clean %>%
+  dplyr::rename(CH.Vertices = convex_hull_vertices,
+         Eccentricity = ellipse_eccentricity,
+         Solidity = solidity)
+
+```
+
+
+```{r - N.seeds}
+
+metrics <- geno.all.clean %>%
+  dplyr::select(-c(sample, timestamp, ellipse_minor_axis, ellipse_major_axis, area, convex_hull_area, perimeter, longest_path))
+
+metrics$filename <- NULL
+
+# Remove rows with NA values
+metrics <-  metrics[complete.cases(metrics),] 
+
+# View the distrtibution of phenotypic traits and remove outliers
+
+# Histogram of trait distribution
+ggplot(data = metrics, aes(x = Area)) + geom_histogram() #Shows there are some outliers
+
+# Plot the distribution for first scan
+# ggplot(data = filter(metrics, measurementlabel == "V600062", Area > 25), aes(x = Major.Axis)) + geom_histogram()
+
+ggplot(data = filter(metrics, Area > 25), aes(y = Major.Axis, x = measurementlabel)) + geom_boxplot()
+
+# Remove outliers from whole data; remove values below 25mm which represent small fragments and not seeds
+ggplot(data = filter(metrics, Area > 25), aes(x = Area)) + geom_histogram()
+
+
+# Filter out outliers from data
+metrics <- metrics %>% 
+  dplyr::filter(Area > 25)
+
+# write.csv(metrics, "Samples_onlyPheno_Converted_mm_Aug15_2022.csv", row.names = F)
+
+N.seeds <- data.frame(table(metrics$measurementlabel))
+colnames(N.seeds) <- c("measurementlabel", "N.seeds")
+
+hist(N.seeds$N.seeds)
+summary(N.seeds$N.seeds)
+
+#(95% confidence interval)
+N.seeds.CI <- N.seeds %>% 
+  dplyr::summarise(mean = mean(N.seeds, na.rm = TRUE),
+            sd = sd(N.seeds, na.rm = TRUE),
+            n = n()) %>%
+  dplyr::mutate(se = sd / sqrt(n),
+         lower.ci = mean - qt(1 - (0.05 / 2), n - 1) * se,
+         upper.ci = mean + qt(1 - (0.05 / 2), n - 1) * se)
+N.seeds.CI
+```
+
+
+To identify and remove seed outliers per sample, I first try different methods. Then, I decided to visualize sample boxplots and then define upper and lower cutoff that will remove those seeds touching on the scanner and identified as a single object (large value of seed area) and seeds fragmented in small pieces identified as separated objects (very small seed area values).
+
+
+```{r outliers (Area)}
+
+#identify outliers using the boxplot.stats function
+outlier_values <- boxplot.stats(metrics$Area)$out  # outlier values.
+length(outlier_values)#267
+max(outlier_values)#685.27
+min(outlier_values)#25.07
+
+#Interquartile Range method (IQR)
+minT <- summary(metrics$Area)[2] - 1.5*IQR(metrics$Area)#118.405
+maxT <- summary(metrics$Area)[5] + 1.5*IQR(metrics$Area)#353.005
+
+area <- metrics %>%
+  dplyr::select(measurementlabel, Area)
+
+# Get interquartile ranges for each genotype or measurement label 
+interquartile_ranges <- aggregate(Area ~ measurementlabel, area, function(x){
+  qq <- quantile(x, probs = c(1, 3)/4)
+  iqr <- diff(qq)
+  lo <- qq[1] - 1.5*iqr
+  hi <- qq[2] + 1.5*iqr
+   c(Mean = mean(x), IQR = unname(iqr), lower = lo, high = hi)
+ }) 
+
+interquartile_ranges <- cbind(interquartile_ranges[1], interquartile_ranges[[2]])
+interquartile_ranges
+
+# ID outliers 
+area2 <- area %>% 
+  dplyr::left_join(interquartile_ranges, by = 'measurementlabel') %>%
+  dplyr::group_by(measurementlabel) %>%
+  dplyr::mutate(outlier = dplyr::case_when(Area <= `lower.25%` ~ "yes",
+                             Area >= `high.75%` ~ "yes",
+                             Area != `high.75%` ~ "no",
+                             Area != `lower.25%` ~ "no"))
+
+#visualize the outliers identified with the IQR method on the boxplot using ggplot2
+ggplot(area2, aes(x=measurementlabel, y=Area)) + 
+  geom_boxplot() + 
+  geom_point(data = area2, aes(x=measurementlabel, y=Area)) +
+  theme(axis.text.x = element_text(angle = 90, size = 4))
+
+outliers <- area2[which(area2$outlier == "yes"),]
+length(unique(outliers$measurementlabel))
+
+write.csv(outliers, "Samples_Area_inmm2_outliers.csv", row.names = F)
+
+#Let's visualize the boxplots of the genotypes with seed outliers for clarity
+area.outliers <- area2[which(area2$measurementlabel %in% outliers$measurementlabel),]
+#tiff("Boxplot_outliers_1.5IQR_WW_Samples_Feb14_20.tiff")
+ggplot(area.outliers, aes(x=measurementlabel, y=Area)) + 
+  geom_boxplot() + 
+  geom_point(data = outliers, aes(x=measurementlabel, y=Area), color = 'red') +
+  theme(axis.text.x = element_text(angle = 90, size = 8))
+#dev.off()
+```
+
+In the above boxplots,  the red dots with values of seed area close to zero or below 60, are pieces of the same seed identified as different objects. On the contrary, the red dots above 350 are those seeds that are too close on the scanner during the scanning that they are identified as a single object. Since the IQR method was a bit conservative because removing extreme seed measures with a biological meaning, we decided to use the value 60 and 350 as empirical cutoffs to remove erroneous seed area measures.
+
+```{r - remove outliers for Area}
+
+metrics.noOut <- metrics %>% 
+  left_join(interquartile_ranges, by = 'measurementlabel') %>%
+  dplyr::group_by(measurementlabel) %>%
+  dplyr::filter(Area >=`lower.25%`) %>%
+  dplyr::filter(Area <= `high.75%`) %>%
+  dplyr::select(-c(Mean, IQR, `lower.25%`, `high.75%`))
+
+# write.csv(metrics.noOut, "Samples_ALLPhenotypes_Metrics_mm_Aug15_2022_noOut.csv", row.names = F)
+```
+
+
+```{r - Remove awns}
+
+# Boxplots for data with the presence of awns to check if its a problem
+
+# V600001
+a <- ggplot(data = filter(metrics.noOut, measurementlabel == "V600001"), aes(y = Major.Axis)) + xlab("V600001") + geom_boxplot()
+
+# V600039
+b <- ggplot(data = filter(metrics.noOut, measurementlabel == "V600039"), aes(y = Major.Axis)) + xlab("V600039") + geom_boxplot()
+
+# V600181
+c <- ggplot(data = filter(metrics.noOut, measurementlabel == "V600181"), aes(y = Major.Axis)) + xlab("V600181") + geom_boxplot()
+
+# V600017
+d <- ggplot(data = filter(metrics.noOut, measurementlabel == "V600017"), aes(y = Major.Axis)) + xlab("V600017") + geom_boxplot()
+
+# V600019
+e <- ggplot(data = filter(metrics.noOut, measurementlabel == "V600019"), aes(y = Major.Axis)) + xlab("V600019") + geom_boxplot()
+
+grid.arrange(a,b,c,d,e, ncol= 3)
+
+# looking at solidity for V600066
+ggplot(data = filter(metrics, measurementlabel == "V600066"), aes(y = Solidity)) + xlab("V600066") + geom_boxplot()
+
+metrics.noOut %>% 
+  dplyr::filter(measurementlabel == "V600066") %>% 
+  dplyr::select(Solidity) %>% 
+  dplyr::arrange(Solidity)
+
+ggplot(data = filter(metrics.noOut, measurementlabel == "V600066"), aes(y = Solidity)) + xlab("V600066 no out") + geom_boxplot()
+
+#Interquartile Range method (IQR)
+minT <- summary(metrics.noOut$Major.Axis)[2] - 1.5*IQR(metrics.noOut$Major.Axis)#4.594837
+maxT <- summary(metrics.noOut$Major.Axis)[5] + 1.5*IQR(metrics.noOut$Major.Axis)#11.66175
+
+major_axis <- metrics.noOut %>%
+  dplyr::select(measurementlabel, Major.Axis)
+
+# Get interquartile ranges for each genotype or measurement label 
+interquartile_ranges <- aggregate(Major.Axis ~ measurementlabel, major_axis, function(x){
+  qq <- quantile(x, probs = c(1, 3)/4)
+  iqr <- diff(qq)
+  lo <- qq[1] - 1.5*iqr
+  hi <- qq[2] + 1.5*iqr
+   c(Mean = mean(x), IQR = unname(iqr), lower = lo, high = hi)
+ }) 
+
+interquartile_ranges <- cbind(interquartile_ranges[1], interquartile_ranges[[2]])
+interquartile_ranges
+
+# ID outliers 
+major_axis2 <- major_axis %>% 
+  dplyr::left_join(interquartile_ranges, by = 'measurementlabel') %>%
+  dplyr::group_by(measurementlabel) %>%
+  dplyr::mutate(outlier = dplyr::case_when(Major.Axis <= `lower.25%` ~ "yes",
+                             Major.Axis >= `high.75%` ~ "yes",
+                             Major.Axis != `high.75%` ~ "no",
+                             Major.Axis != `lower.25%` ~ "no"))
+
+#visualize the outliers identified with the IQR method on the boxplot using ggplot2
+ggplot(major_axis2, aes(x=measurementlabel, y=Major.Axis)) + 
+  geom_boxplot() + 
+  geom_point(data = major_axis2, aes(x=measurementlabel, y=Major.Axis, color ="red")) +
+  theme(axis.text.x = element_text(angle = 90, size = 4))
+
+outliers <- major_axis2[which(major_axis2$outlier == "yes"),]
+length(unique(outliers$measurementlabel))
+
+write.csv(outliers, "Samples_Major_axis_inmm2_outliers.csv", row.names = F)
+
+#Let's visualize the boxplots of the genotypes with seed outliers for clarity
+major_axis.outliers <- major_axis2[which(major_axis2$measurementlabel %in% outliers$measurementlabel),]
+#tiff("Boxplot_outliers_1.5IQR_WW_Samples_Feb14_20.tiff")
+ggplot(major_axis.outliers, aes(x=measurementlabel, y=Major.Axis)) + 
+  geom_boxplot() + 
+  geom_point(data = outliers, aes(x=measurementlabel, y=Major.Axis), color = 'red') +
+  theme(axis.text.x = element_text(angle = 90, size = 8))
+#dev.off()
+
+```
+
+```{r - remove outliers for Area}
+
+metrics.noOut2 <- metrics.noOut %>% 
+  left_join(interquartile_ranges, by = 'measurementlabel') %>%
+  dplyr::group_by(measurementlabel) %>%
+  dplyr::filter(Major.Axis >=`lower.25%`) %>%
+  dplyr::filter(Major.Axis <= `high.75%`) %>%
+  dplyr::select(-c(Mean, IQR, `lower.25%`, `high.75%`))
+
+ write.csv(metrics.noOut2, "Samples_ALLPhenotypes_Metrics_mm_Aug15_2022_noOut.csv", row.names = F)
+```
+
+
+
+```{r -Trait Distribution}
+
+p2 <- ggplot(metrics.noOut2, aes(x = Eccentricity)) + 
+  geom_density(fill = "orange", alpha = 0.7) + xlab("Ellipse Eccentricity") + theme_bw() +
+  theme(axis.title = element_text(size = 12),
+        axis.text = element_text(size = 12))
+
+p3 <- ggplot(metrics.noOut2, aes(x = Solidity)) + 
+  geom_density(fill = "orange", alpha = 0.7) + xlab("Solidity") + xlim(c(0.85, 1.1)) +
+  theme_bw() +
+  theme(axis.title = element_text(size = 12),
+        axis.text = element_text(size = 12))
+
+p4 <- ggplot(metrics.noOut2, aes(x = CH.Vertices)) + 
+  geom_density(fill = "orange", alpha = 0.7) + xlab("Convex Hull Vertices") + theme_bw() +
+  theme(axis.title = element_text(size = 12),
+        axis.text = element_text(size = 12))
+
+p5 <- ggplot(metrics.noOut2, aes(x = Area)) + 
+  geom_density(fill = "orange", alpha = 0.7) + xlab("Seed Area") + theme_bw() +
+  theme(axis.title = element_text(size = 12),
+        axis.text = element_text(size = 12))
+
+p6 <- ggplot(metrics.noOut2, aes(x = CH.Area)) + 
+  geom_density(fill = "orange", alpha = 0.7) + xlab("Convex Hull Area") + theme_bw() +
+  theme(axis.title = element_text(size = 12),
+        axis.text = element_text(size = 12))
+
+p7 <- ggplot(metrics.noOut2, aes(x = Perimeter)) + 
+  geom_density(fill = "orange", alpha = 0.7) + xlab("Perimeter") + theme_bw() +
+  theme(axis.title = element_text(size = 12),
+        axis.text = element_text(size = 12))
+
+p10 <- ggplot(metrics.noOut2, aes(x = Longest.Path)) + 
+  geom_density(fill = "orange", alpha = 0.7) + xlab("Longest Path") + theme_bw() +
+  theme(axis.title = element_text(size = 12),
+        axis.text = element_text(size = 12))
+
+p11 <- ggplot(metrics.noOut2, aes(x = Major.Axis)) + 
+  geom_density(fill = "orange", alpha = 0.7) + xlab("Ellipse Major Axis") + theme_bw() +
+  theme(axis.title = element_text(size = 12),
+        axis.text = element_text(size = 12))
+
+p12 <- ggplot(metrics.noOut2, aes(x = Minor.Axis)) + 
+  geom_density(fill = "orange", alpha = 0.7) + xlab("Ellipse Minor Axis") + theme_bw() +
+  theme(axis.title = element_text(size = 12),
+        axis.text = element_text(size = 12))
+#tiff("WW_Trait_Distributions.tiff", res = 300, height = 25, width = 25, units = "cm")
+grid.arrange(p2, p3, p4, p5, p6, p7, p10, p11, p12, ncol= 3)
+#dev.off()
+```
+
+
+```{r - estimate mean per genotype}
+
+
+all.seeds.MEAN2 <- metrics.noOut2 %>%
+  group_by(measurementlabel) %>% 
+  summarise_at(vars(Eccentricity, Solidity, Area, CH.Vertices, CH.Area, Minor.Axis, Major.Axis, Perimeter, Longest.Path), list(median))
+
+gsor_no <- read.csv("only_sativa.csv") %>%
+  separate(Accession, c('ID', 'GSOR')) %>%
+  dplyr::filter(!row_number() %in% c(3, 4, 9)) %>%
+  dplyr::select(GSOR, Label_Phenotyping) %>%
+  dplyr::arrange(GSOR) 
+  #dplyr::filter(GSOR!="310226") %>%
+  #dplyr::filter(Label!="V600030") %>%
+  #dplyr::arrange(GSOR) %>%
+  #dplyr::rename(measurementlabel = Label)
+
+# Repair label names 
+gsor_no$Label_Phenotyping <- gsub(".*n", "", gsor_no$Label_Phenotyping)
+gsor_no$Label_Phenotyping <-  sub("_", "", gsor_no$Label_Phenotyping)
+
+gsor_no <- gsor_no %>%
+  dplyr::rename(measurementlabel = Label_Phenotyping)
+
+all.seeds.MEAN2 <- join(all.seeds.MEAN2, gsor_no, by = "measurementlabel")
+# Remove all rows with NAs
+all.seeds.MEAN2 <- all.seeds.MEAN2[complete.cases(all.seeds.MEAN2), ]
+
+all.seeds.MEAN2 <- arrange(all.seeds.MEAN2, GSOR)
+
+```
+
+
+```{r - Phenotypic variation}
+
+# Add sub-population information to phenotype data
+pop <- read.csv("minicore_gsor.csv", header = TRUE)
+seed_weight <- read.csv("Mini_core_seed_weight.csv")
+
+# select accession ID, country, and sub-population from population data. 
+pop <- pop %>%
+  dplyr::select(c("Accession.Number","Country","Subpop"))
+
+seed_weight <- seed_weight %>%
+  dplyr::mutate(Accession = str_replace(Accession, "^\\S* ", "")) %>%
+  dplyr::select(c(Accession, Adjusted_weight))
+
+names(pop) <- c("GSOR", "region", "sub-population")
+names(seed_weight) <- c("GSOR", "seed_weight")
+
+phenotypes <- join(all.seeds.MEAN2, pop, by = 'GSOR') %>%
+  dplyr::filter(!`sub-population`%in% c("ADMIX")) %>%
+  na.omit()
+
+phenotypes <- join(phenotypes, seed_weight, by = 'GSOR')
+
+# Change names of all admix varieties to ADMIX
+# phenotypes$`sub-population`[ phenotypes$`sub-population` == "IND-TRJ"] <- "ADMIX"
+
+# Distribution of subpopulations across all regions
+
+# create an object for total region counts
+totals <- phenotypes %>% 
+  dplyr::count(region)
+
+# create a barplot object
+barplot <- phenotypes %>%
+  dplyr::count(`sub-population`, region) %>%
+  dplyr::filter(n !=10) %>%
+  ggplot(aes(y = region, x = n)) +
+  geom_bar(stat = "identity", aes(fill = `sub-population`)) +
+  theme(axis.text.x = element_text(angle = 90, vjust=0.3, hjust=1)) +
+  geom_text(data = totals, aes(label = n), cex = 3) +
+  labs(y ="Regions", title = "Distribution of subpopulations across regions") 
+
+# visulaize barplot
+barplot
+
+write.csv(phenotypes, "USDA_seed_scan_phenotypes.csv", row.names = F)
+
+```
+
+
+Plot trait distributions by regions and sub-populations
+
+``` {r trait distribution by region}
+
+Eccentricity <- ggplot(phenotypes,
+       aes(y = Eccentricity, fill = region)) +
+  geom_boxplot() +
+  labs(y ="Eccentricity") 
+
+
+Solidity <- ggplot(phenotypes,
+       aes(y = Solidity, fill = region)) +
+  geom_boxplot() +
+  labs(y ="Solidity") 
+
+
+Area <- ggplot(phenotypes,
+       aes(y = Area, fill = region)) +
+  geom_boxplot() +
+  labs(y ="Area") 
+
+
+CH.Vertices <- ggplot(phenotypes,
+       aes(y = CH.Vertices, fill = region)) +
+  geom_boxplot() +
+  labs(y ="CH.Vertices") 
+
+
+CH.Area <- ggplot(phenotypes,
+       aes(y = CH.Area, fill = region)) +
+  geom_boxplot() +
+  labs(y ="CH.Area") 
+
+
+Minor.Axis <- ggplot(phenotypes,
+       aes(y = Minor.Axis, fill = region)) +
+  geom_boxplot() +
+  labs(y ="Minor.Axis")
+
+
+Major.Axis <- ggplot(phenotypes,
+       aes(y = Major.Axis, fill = region)) +
+  geom_boxplot() +
+  labs(y ="Major.Axis")
+
+
+Perimeter <- ggplot(phenotypes,
+       aes(y = Perimeter, fill = region)) +
+  geom_boxplot() +
+  labs(y ="Perimeter")
+
+
+Longest.Path <- ggplot(phenotypes,
+       aes(y = Longest.Path, fill = region)) +
+  geom_boxplot() +
+  labs(y ="Longest.Path")
+
+ggplot(phenotypes,
+                 aes(y = seed_weight, fill = region)) +
+  geom_boxplot() +
+  labs(y = "seed_weight")
+
+
+ggarrange(Eccentricity, Solidity, Area, CH.Vertices, CH.Area, Minor.Axis, Major.Axis, Perimeter, Longest.Path + rremove("x.text"), common.legend = TRUE, ncol = 2, nrow = 2)
+
+
+```
+
+``` {r trait distribution by sub-population}
+
+Eccentricity <- ggplot(phenotypes,
+       aes(y = Eccentricity, fill = `sub-population`)) +
+  geom_boxplot() +
+  labs(y ="Eccentricity") 
+
+
+Solidity <- ggplot(phenotypes,
+       aes(y = Solidity, fill = `sub-population`)) +
+  geom_boxplot() +
+  labs(y ="Solidity") 
+
+
+Area <- ggplot(phenotypes,
+       aes(y = Area, fill = `sub-population`)) +
+  geom_boxplot() +
+  labs(y ="Area") 
+
+
+CH.Vertices <- ggplot(phenotypes,
+       aes(y = CH.Vertices, fill = `sub-population`)) +
+  geom_boxplot() +
+  labs(y ="CH.Vertices") 
+
+
+CH.Area <- ggplot(phenotypes,
+       aes(y = CH.Area, fill = `sub-population`)) +
+  geom_boxplot() +
+  labs(y ="CH.Area") 
+
+
+Minor.Axis <- ggplot(phenotypes,
+       aes(y = Minor.Axis, fill = `sub-population`)) +
+  geom_boxplot() +
+  labs(y ="Minor.Axis")
+
+
+Major.Axis <- ggplot(phenotypes,
+       aes(y = Major.Axis, fill = `sub-population`)) +
+  geom_boxplot() +
+  labs(y ="Major.Axis")
+
+
+Perimeter <- ggplot(phenotypes,
+       aes(y = Perimeter, fill = `sub-population`)) +
+  geom_boxplot() +
+  labs(y ="Perimeter")
+
+
+Longest.Path <- ggplot(phenotypes,
+       aes(y = Longest.Path, fill = `sub-population`)) +
+  geom_boxplot() +
+  labs(y ="Longest.Path")
+
+
+ggarrange(Eccentricity, Solidity, Area, CH.Vertices, CH.Area, Minor.Axis, Major.Axis, Perimeter, Longest.Path + rremove("x.text"), common.legend = TRUE, ncol = 2, nrow = 2)
+
+
+p <- ggbiplot(rice.pca,
+              obs.scale = 1, 
+              var.scale=1,
+              ellipse=F,
+              circle=F,
+              varname.size=4,
+              var.axes=T,
+              groups=norm1$subpopulation, #no need for coloring, I'm making the points invisible
+              alpha=0) #invisible points, I add them below
+
+P$layers <- c(geom_point(aes(color=norm1$subpopulation), cex=3), P$layers) #add geom_point in a layer underneath (only way I have to change the size of the points in ggbiplot)
+
+P
+
+colnames(phenotypes)[colnames(phenotypes) == "sub-population"] <- "sub_population"
+
+anova <- aov(Solidity ~ sub_population, data = phenotypes)
+summary(anova)
+
+# Tukey's test
+tukey <- TukeyHSD(anova)
+print(tukey)
+
+# compact letter display
+cld <- multcompLetters4(anova, tukey)
+print(cld)
+
+# Make sure column names are unique
+colnames(phenotypes) <- make.names(colnames(phenotypes), unique = TRUE)
+
+Tk <- phenotypes %>%
+  dplyr::group_by(sub_population) %>%
+  dplyr::summarise(mean = mean(Solidity), quant = quantile(Solidity, probs = 0.75)) %>%
+  dplyr::arrange(desc(mean))
+
+
+# extracting the compact letter display and adding to the Tk table
+cld <- as.data.frame.list(cld$sub_population)
+Tk$cld <- cld$Letters
+
+print(Tk)
+
+
+# extracting the compact letter display and adding to the Tk table
+cld <- as.data.frame.list(cld$feed)
+Tk$cld <- cld$Letters
+
+print(Tk)
+
+# boxplot
+ggplot(phenotypes, aes(sub_population, Solidity)) + 
+  geom_boxplot(aes(fill = factor(..middle..)), show.legend = FALSE) +
+  labs(x="Subpopulation", y="Solidity") +
+  theme_bw() + 
+  geom_text(data = Tk, aes(x = sub_population, y = quant, label = cld), size = 3, vjust=-1, hjust =-1) +
+  scale_fill_brewer(palette = "Blues")
+
+emm <- emmeans::emmeans(z, pairwise ~ `sub-population`)
+
+emm
+
+plot(emm$emmeans)
+
+```
+
+
+
+
+```{r mass}
+
+phenomass <- phenotypes %>% 
+  dplyr::mutate(mass = seed_weight/Area)
+
+ggplot(data = phenomass, aes(x = Solidity, y = mass, color = `sub-population`)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+lmass <- lm(Solidity ~ mass * `sub-population`, data = phenomass)
+
+anova(lmass)
+summary(lmass)
+
+
+myY2 <- myY %>% 
+  dplyr::mutate(ratio = Major.Axis/Minor.Axis)
+
+ggplot(data = ratio, aes(x = Solidity, y = ratio, color = `sub-population`)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+lmratio <- lm(Solidity ~ ratio * `sub-population`, data = ratio)
+
+anova(lmratio)
+summary(lmratio)
+
+
+z <- lm(ratio ~ `sub-population`, data = ratio)
+anova(z)
+emm <- emmeans::emmeans(z, pairwise ~ `sub-population`)
+
+emm
+
+plot(emm$emmeans)
+
+
+ggscatter(ratio, x = "Solidity", y = "ratio", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson",
+          xlab = "Solidity", ylab = "ratio")
+```
