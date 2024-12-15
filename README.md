@@ -1,3 +1,3 @@
 # Rice Seed Phenotyping
 
-Analysis pipeline for phenotyping rice seeds using PlantCV workflow. 
+Identifying genetic factors behind seed trait variation in *O. sativa* is crucial for improving agricultural productivity and meeting consumer preferences. Seed size and shape influence fitness, adaptation, and market value, with larger seeds supporting better seedling growth and reproductive performance. This project explores the use of PlantCV, a compuer vision tool, to identify genetic determinants of seed traits in *O. sativa* samples collected from the USDA and IRRI gene banks. We combined these methods with genome-wide association studies, and uncovered novel genetic candidates that could potentially enhance breeding for climate-resilient, consumer-preferred varieties.
