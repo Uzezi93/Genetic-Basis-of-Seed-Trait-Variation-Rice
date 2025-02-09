@@ -131,7 +131,7 @@
 <p>We scanned 201 <i>O. sativa</i> seed samples using an Epson V600 scanner with a standardized setup, including a black tray, ruler, and color standards. Each scan contained ~50 well-spaced seeds to minimize measurement errors. Images were named systematically for compatibility with PlantCV. Image processing was performed on a personal computer (Intel® Core™ i5-1035G1, 7.6 GB RAM), using a modified PlantCV Python pipeline to standardize RGB images, segment seeds, and measure 12 traits per seed. Processed data and scripts are available on <a href="https://github.com/Uzezi93/Genetic-Basis-of-Seed-Trait-Variation-Rice">GitHub</a>.</p>
 
 <p style="margin-bottom: 20px; margin-top: 20px;">
-  <strong>Table 1</strong>. Summary of 12 traits analyzed (Gehan <i>et al</i>., 2017; Marrano & Moyers, 2022).
+  <strong>Table 1</strong>. Summary of 12 traits analyzed (Gehan <i>et al</i>., 2017; [Marrano & Moyers, 2022](https://acsess.onlinelibrary.wiley.com/doi/full/10.1002/ppj2.20033)).
 </p>
 
 <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
@@ -213,9 +213,7 @@
 <p><h4>Question 1: Novel Differences in Seed Traits Among <i>O. sativa</i> Subpopulations</h4></p>
 
 <p>We identified novel differences in seed traits among <i>O. sativa</i> subpopulations, focusing on convex hull vertices, convex hull area, solidity, longest path, and eccentricity. Traits like perimeter, area, length, and width were excluded as they have been extensively studied.</p>
-
-<p><h5>Statistical Analysis</h5></p>
-
+  
   <ul>
   <li>All analyses were conducted in R v4.2.3.</li>
   <li>Seed images were converted from pixels to millimeters for   comparability.</li>
@@ -241,11 +239,6 @@ Candidate Gene Identification</h4></p>
   <ul>
   <li>Genes within a 1 MB LD window surrounding significant SNPs were identified using the MSUv7 Nipponbare genome.</li>
   <li>Spatiotemporal expression data from the Rice ePlant database was used to infer functional relevance.</li>
-  </ul>
-
-<p><h5>Haplotype Analysis</h5></p>
-
-  <ul>
   <li>Conducted haplotype analysis on seed trait genes using the 3K Rice Genome dataset.</li>
   <li>SNP data was retrieved from SNPseek, with haplotypes.</li>
   <li>R pegas package was used to construct haplotype networks.</li>
