@@ -20,8 +20,6 @@
 
 <h3>Results</h3>
 
----------------------------------------------------------------------
-
 <p><h4>Question 1: Are there novel differences between seed trait phenotypes among <i>O. sativa</i> subpopulations?</h4></p>
 
 <p>We generated twelve seed phenotypes with our phenotyping setup, including length, width, and area (Table 1). However, we classified differences observed between subpopulations for the following seed traits as novel differences:</p>
@@ -118,15 +116,11 @@
 
 <h3>Conclusion</h3>
 
---------------------------------------------------------------------------
-
 <p>Solidity reflects both seed-specific traits and broader aspects of plant reproduction and development. This study highlights the potential of computer vision as a powerful tool for identifying pleiotropic genes and unraveling complex genetic interactions.</p>
 
 --------------------------------------------------------------------------
 
 <h3>Methods</h3>
-
---------------------------------------------------------------------------
 
 <p><h4>Plant Material</h4></p>
 
@@ -216,45 +210,60 @@
 
 <p><h4>Data Analysis</h4></p>
 
-<p><h4>Question 1: Novel Differences in Seed Traits Among *O. sativa* Subpopulations</h4></p>
+<p><h4>Question 1: Novel Differences in Seed Traits Among <i>O. sativa</i> Subpopulations</h4></p>
 
-<p>We identified novel differences in seed traits among O. sativa subpopulations, focusing on convex hull vertices, convex hull area, solidity, longest path, and eccentricity. Traits like perimeter, area, length, and width were excluded as they have been extensively studied.</p>
+<p>We identified novel differences in seed traits among <i>O. sativa</i> subpopulations, focusing on convex hull vertices, convex hull area, solidity, longest path, and eccentricity. Traits like perimeter, area, length, and width were excluded as they have been extensively studied.</p>
 
 <p><h5>Statistical Analysis</h5></p>
 
-<p>- All analyses were conducted in R v4.2.3.
-- Seed images were converted from pixels to millimeters for comparability.
-- Outlier filtering was applied to remove extreme values due to scanning errors.
-- Principal Component Analysis (PCA) was performed to understand trait variation.
-- Pairwise comparisons of traits among subpopulations were conducted using the Emmeans package.
-- Correlation analysis was used to explore relationships between traits.</p>
-
+  <ul>
+  <li>All analyses were conducted in R v4.2.3.</li>
+  <li>Seed images were converted from pixels to millimeters for   comparability.</li>
+  <li>Outlier filtering was applied to remove extreme values due to scanning errors.</li>
+  <li>Principal Component Analysis (PCA) was performed to understand trait variation.</li>
+  <li>Pairwise comparisons of traits among subpopulations were conducted using the Emmeans package.</li>
+  <li>Correlation analysis was used to explore relationships between traits.</li>
+  </ul>
+  
 <p><h4>Question 2: Genomic Regions Associated with Seed Traits
 Genome-Wide Association Study (GWAS)</h4></p>
 
-<p>- Conducted GWAS using 40,866 high-density SNP markers.
-- Used MLM, MLMM, and FarmCPU models in R GAPIT to identify significant SNPs (FDR ≤ 0.05).
-- Chromosomes 3, 7, 8, and 9 were associated with seed traits.
-- Linkage Disequilibrium (LD) decay analysis was performed using PLINK 2.0 to determine mapping resolution.</p>
+  <ul>
+  <li>Conducted GWAS using 40,866 high-density SNP markers.</li>
+  <li>Used MLM, MLMM, and FarmCPU models in R GAPIT to identify significant SNPs (FDR ≤ 0.05).</li>
+  <li>Chromosomes 3, 7, 8, and 9 were associated with seed traits.
+  <li>Linkage Disequilibrium (LD) decay analysis was performed using PLINK 2.0 to determine mapping resolution.</li>
+  </ul>
 
 <p><h4>Question 3: Functional and Adaptive Relevance of Genomic Regions
 Candidate Gene Identification</h4></p>
 
-<p>- Genes within a 1 MB LD window surrounding significant SNPs were identified using the MSUv7 Nipponbare genome.
-- Spatiotemporal expression data from the Rice ePlant database was used to infer functional relevance.</p>
+  <ul>
+  <li>Genes within a 1 MB LD window surrounding significant SNPs were identified using the MSUv7 Nipponbare genome.</li>
+  <li>Spatiotemporal expression data from the Rice ePlant database was used to infer functional relevance.</li>
+  </ul>
 
 <p><h5>Haplotype Analysis</h5></p>
 
-<p>- Conducted haplotype analysis on seed trait genes using the 3K Rice Genome dataset.
-- SNP data was retrieved from SNPseek, with haplotypes.
-- R pegas package was used to construct haplotype networks.</p>
+  <ul>
+  <li>Conducted haplotype analysis on seed trait genes using the 3K Rice Genome dataset.</li>
+  <li>SNP data was retrieved from SNPseek, with haplotypes.</li>
+  <li>R pegas package was used to construct haplotype networks.</li>
+  </ul>
 
 <p align="center">
-    <img src="Methods.png" alt="Fig 7. PCA" height="400">
+    <img src="Methods.png" alt="Fig 7. Method workflow" width="400" height="400">
+</p>
+
+<p align="center">
+    <img src="USDA_minicore/Seed_phenotyping/Phenotyping_SETUP.png" alt="Phenotyping setup" height="300" width="700">
 </p>
 
 <p><h5>Follow-Up Analysis</h5></p>
 
-<p>- Investigate how haplotypes interact with climatic and agroecological variables to shape seed traits.
-- Climate data will be retrieved from BIOCLIM, using landrace locations from the Genesys database.
-- Multivariate analysis will explore genotype-by-environment (GxE) interactions driving seed trait variation in *O. sativa*.
+<ul>
+  <li>Investigate how haplotypes interact with climatic and agroecological variables to shape seed traits.</li>
+  <li>Climate data will be retrieved from BIOCLIM, using landrace locations from the Genesys database.</li>
+  <li>Multivariate analysis will explore haplotype-by-environment interactions driving seed trait variation in <i>O. sativa</i>.</li>
+  </ul>
+  
