@@ -252,7 +252,7 @@ Candidate Gene Identification</h4></p>
     <img src="USDA_minicore/Seed_phenotyping/Phenotyping_SETUP.png" alt="Phenotyping setup" height="300" width="700">
 </p>
 
-<p><h5>Follow-Up Analysis</h5></p>
+<p><h4>Follow-Up Analysis</h4></p>
 
 <ul>
   <li>Investigate how haplotypes interact with climatic and agroecological variables to shape seed traits.</li>
