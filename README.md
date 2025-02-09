@@ -131,7 +131,7 @@
 <p>We scanned 201 <i>O. sativa</i> seed samples using an Epson V600 scanner with a standardized setup, including a black tray, ruler, and color standards. Each scan contained ~50 well-spaced seeds to minimize measurement errors. Images were named systematically for compatibility with PlantCV. Image processing was performed on a personal computer (Intel® Core™ i5-1035G1, 7.6 GB RAM), using a modified PlantCV Python pipeline to standardize RGB images, segment seeds, and measure 12 traits per seed. Processed data and scripts are available on <a href="https://github.com/Uzezi93/Genetic-Basis-of-Seed-Trait-Variation-Rice">GitHub</a>.</p>
 
 <p style="margin-bottom: 20px; margin-top: 20px;">
-  <strong>Table 1</strong>. Summary of 12 traits analyzed (Gehan <i>et al</i>., 2017; [Marrano & Moyers, 2022](https://acsess.onlinelibrary.wiley.com/doi/full/10.1002/ppj2.20033)).
+  <strong>Table 1</strong>. Summary of 12 traits analyzed (Gehan <i>et al</i>., 2017; <a href="https://acsess.onlinelibrary.wiley.com/doi/full/10.1002/ppj2.20033" target="_blank">Marrano & Moyers, 2022</a>)
 </p>
 
 <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
