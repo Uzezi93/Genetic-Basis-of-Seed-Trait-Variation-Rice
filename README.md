@@ -55,7 +55,7 @@
 
 <p><h4>Question 2: Which genomic regions are associated with these seed traits?</h4></p>
 
-<p>Our GWAS analysis revealed significant SNPs on chromosomes 3, 7, 8, and 9. For downstream gene candidate identification, we focused on the LD regions on chromosomes 3 and 7. Chromosome 3 exhibited the most significant association (p-value = 7 × 10⁻⁷), while the association on chromosome 7 was identified by multiple GWAS methods. We identified 457 genes within the 1MB LD region on chromosomes 3 and 7, specifically for the Solidity seed trait (Fig. 4). From this set, we selected 100 genes within the LD of significant SNPs on these chromosomes and computed knetscores using [knetminer](https://knetminer.com/) (Fig. 5). Knetscores rank nodes in a biological network based on their relevance to a specific context.</p>
+<p>Our GWAS analysis revealed significant SNPs on chromosomes 3, 7, 8, and 9. For downstream gene candidate identification, we focused on the LD regions on chromosomes 3 and 7. Chromosome 3 exhibited the most significant association (p-value = 7 × 10⁻⁷), while the association on chromosome 7 was identified by multiple GWAS methods. We identified 457 genes within the 1MB LD region on chromosomes 3 and 7, specifically for the Solidity seed trait (Fig. 4). From this set, we selected 100 genes within the LD of significant SNPs on these chromosomes and computed knetscores using <a href="https://knetminer.com/" target="_blank">knetminer</a> (Fig. 5). Knetscores rank nodes in a biological network based on their relevance to a specific context.</p>
 
 <div style="display: flex; align-items: center; justify-content: space-between; gap: 20px;">
   <img src="USDA_minicore/GWAS/Results/Soilidity_GWAS_Plot_Single.png" alt="Fig 4. GWAS Solidity" width="500" height="300" />
@@ -73,14 +73,11 @@
 <p><h4>Question 3: Are these genomic regions likely of any functional and adaptive relevance?</h4></p>
 
 <p>
-    On chromosome 3, OsMTN3, also known as SWEET12, had the highest knetscore of 53.6. OsMTN3 plays a crucial role in sucrose transport during early grain filling, and its disruption leads to defective grain filling and reduced seed size 
-    [Ma *et al.*, 2017](https://pubmed.ncbi.nlm.nih.gov/28371825/).
+    On chromosome 3, OsMTN3, also known as SWEET12, had the highest knetscore of 53.6. OsMTN3 plays a crucial role in sucrose transport during early grain filling, and its disruption leads to defective grain filling and reduced seed size (<a href="https://pubmed.ncbi.nlm.nih.gov/28371825/" target="_blank">Ma <em>et al.</em>, 2017</a>).
 </p>
 
 <p>
-    On chromosome 7, OsSIS7 had the highest knetscore of 98.9 (Fig. 5). OsSIS7 has been implicated in the regulation of seed and grain size in rice. Studies have shown that mutations in OsSIS7 can lead to alterations in seed size, which is a critical trait for yield improvement. The gene's role in seed development is linked to its influence on cell division and expansion processes, which are crucial for determining final seed size 
-    [Zhang *et al.*, 2013](https://pubmed.ncbi.nlm.nih.gov/23911125/).
-</p>
+    On chromosome 7, OsSIS7 had the highest knetscore of 98.9 (Fig. 5). OsSIS7 has been implicated in the regulation of seed and grain size in rice. Studies have shown that mutations in OsSIS7 can lead to alterations in seed size, which is a critical trait for yield improvement. The gene's role in seed development is linked to its influence on cell division and expansion processes, which are crucial for determining final seed size (<a href="https://pubmed.ncbi.nlm.nih.gov/23911125/" target="_blank">Zhang <em>et al.</em>, 2013</a>).</p>
 
 <div style="display: flex; align-items: center; justify-content: space-between; gap: 20px;">
   <img src="USDA_minicore/GWAS/Results/Gene_Functional_Enrichment/chr3_gene_function.png" alt="Fig 5. chr3 network" width="450" height="500" />
@@ -104,7 +101,7 @@
   <strong>B.</strong> OsSIS7 is highly expressed in young seeds (S1 and S2 stage)
 </p>
 
-<p>We are currently exploring the relationship between the haplotype fitness these identified genes and bioclimatic factors using multivariate analysis (Fig. 7). This will help infer how genotype-by-environment (GxE) interactions drive seed trait variation in *O. sativa*. Climate data for rice-growing regions will be retrieved from the BIOCLIM dataset, and we are using the [3K rice genome dataset](https://iric.irri.org/projects/3000-rice-genomes-project) for our haplotype analysis.</p>
+<p>We are currently exploring the relationship between the haplotype fitness these identified genes and bioclimatic factors using multivariate analysis (Fig. 7). This will help infer how genotype-by-environment (GxE) interactions drive seed trait variation in *O. sativa*. Climate data for rice-growing regions will be retrieved from the BIOCLIM dataset, and we are using the <a href="https://iric.irri.org/projects/3000-rice-genomes-project" target="_blank">3K rice genome dataset</a> for our haplotype analysis.</p>
 
 <p align="center">
     <img src="USDA_minicore/GWAS/Haplotype_Analysis/GxE_Method.png" alt="Fig 7. PCA" width="1000" height="400">
@@ -259,4 +256,46 @@ Candidate Gene Identification</h4></p>
   <li>Climate data will be retrieved from BIOCLIM, using landrace locations from the Genesys database.</li>
   <li>Multivariate analysis will explore haplotype-by-environment interactions driving seed trait variation in <i>O. sativa</i>.</li>
   </ul>
+
+--------------------------------------------------------------------------
+
+<h3>References</h3>
+
+<ul>
+    <li>
+        <a href="https://acsess.onlinelibrary.wiley.com/doi/full/10.1002/ppj2.20033" target="_blank">
+            Marrano, A., & Moyers, B. (2022). Advances in plant phenomics: From machine learning to genome-wide association studies. 
+            <i>Plant Phenome Journal</i>, 5(1), e20033.
+        </a>
+    </li>
+    <li>
+        <a href="https://pubmed.ncbi.nlm.nih.gov/28371825/" target="_blank">
+            Ma, L., Zhang, D., Miao, Q., Yang, J., Xuan, Y., & Hu, Y. (2017). Essential role of sugar transporter OsMTN3 in rice seed development. 
+            <i>Plant Physiology</i>, 173(2), 1334-1347.
+        </a>
+    </li>
+    <li>
+        <a href="https://pubmed.ncbi.nlm.nih.gov/23911125/" target="_blank">
+            Zhang, X., Wang, J., Huang, J., Lan, H., Wang, C., Yin, C., Wu, Y., & Tang, J. (2013). OsSIS7, a seed size regulatory gene, influences grain yield and adaptability in rice. 
+            <i>Journal of Experimental Botany</i>, 64(18), 5705-5718.
+        </a>
+    </li>
+    <li>
+        <a href="https://iric.irri.org/projects/3000-rice-genomes-project" target="_blank">
+            The 3K Rice Genomes Project. (2014). The 3,000 rice genomes dataset. 
+            <i>GigaScience</i>, 3, 7.
+        </a>
+    </li>
+    <li>
+        <a href="https://knetminer.com/" target="_blank">
+            KnetMiner. (2023). Knowledge network-based data mining for functional genomics.
+        </a>
+    </li>
+    <li>
+        <a href="https://www.ars-grin.gov/" target="_blank">
+            USDA ARS. (2023). Germplasm Resources Information Network (GRIN).
+        </a>
+    </li>
+</ul>
+
   
