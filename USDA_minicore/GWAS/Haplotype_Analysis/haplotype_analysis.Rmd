@@ -1,0 +1,57 @@
+---
+title: "Rice_haplotype_analysis"
+author: "Uzezi Okinedo"
+date: "4/2/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load libraries}
+
+library(adegenet)
+library(ape)
+library(ggtree)
+library(ggplot2)
+library(stats)
+library(ips)
+library(msa)
+library(haplotypes)
+library(pegas)
+
+```
+
+```{r load data}
+
+# data <- fasta2DNAbin("pop2.fasta") # data for argonaute gene
+Os03g0353900-upstream <-fasta2DNAbin("Os03g0353900/Os03g0353900-2kb-upstream.fa")
+# load("Os07g0167200/Os07g0167200.RData")
+image(Os03g0353900-upstream)
+x <- Os03g0353900-upstream
+h <- haplotype(x)
+net <- haploNet(h)
+
+
+countHap <- function(hap = h, dna = x){
+    with(
+        stack(setNames(attr(hap, "index"), rownames(hap))),
+        table(hap = ind, pop = attr(dna, "dimnames")[[1]][values])
+    )
+}
+
+plot(net, scale.ratio = 0.08, cex = 1, pie=countHap(), legend = T, label =T)
+
+seq <- as.data.frame(diffHaplo(h, 1:7))
+seq2 <- data.frame(t(seq))
+seq3 <- seq2[-1,]
+#colnames(seq3) <- c("snp-chr03-13320070",	"snp-chr03-13320477",	"snp-chr03-13322271",	"snp-chr03-13323725",	"snp-chr03-13324566",	"snp-chr03-13324789",	"snp-chr03-13324799",	"snp-chr03-13324923",	"snp-chr03-13325100",	"snp-chr03-13325156",	"snp-chr03-13325170",	"snp-chr03-13325407",	"snp-chr03-13325559",	"snp-chr03-13326140",	"snp-chr03-13326330") # for chr 3
+
+#colnames(seq3) <- c("snp-chr07-03610991", "snp-chr07-03611128", "snp-chr07-03611492", "snp-chr07-03611685", "snp-chr07-03611966", "snp-chr07-03612344", "snp-chr07-03612827", "snp-chr07-03612947", "snp-chr07-03613028", "snp-chr07-03613030", "snp-chr07-03613097", "snp-chr07-03613185", "snp-chr07-03613402", "snp-chr07-03613639") # for Os07g0167200
+
+seq4 <- seq3[-10,]
+
+write.table(seq4, file = "Os07g0167200/Os07g0167200-haplotypes.txt", sep = "\t", quote = F)
+
+```

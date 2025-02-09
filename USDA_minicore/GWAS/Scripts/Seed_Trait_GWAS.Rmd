@@ -1,0 +1,196 @@
+---
+title: "USDA Rice Seed Trait GWAS"
+author: "Uzezi Okinedo"
+date: "2024-12-15"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r GWAS with GAPIT}
+
+# Load required libraries
+library("bigmemory")
+library("genetics")
+#library("multtest")
+library("tidyverse")
+library("biganalytics")
+library("compiler") #this library is already installed in R
+#source("http://zzlab.net/GAPIT/GAPIT.library.R")
+# source("http://www.zzlab.net/GAPIT/emma.txt")
+#source("http://zzlab.net/GAPIT/gapit_functions.txt")
+# source("http://zzlab.net/FarmCPU/FarmCPU_functions.txt")
+library(gtools)
+
+# devtools::install_github("jiabowang/GAPIT3",force=TRUE)
+#library(installr)
+
+#-------------------------------------------------------------------------------------
+# Remove unwanted spaces and commas from hapmap data before converting to plink file
+Hap <- read.table("1-s2.0-S0168945221001035-mmc1.txt", header = T)
+Hap <- as.data.frame(apply(Hap,2,function(x)gsub('\\s+', '',x)))
+Hap$rs <- gsub(",","",Hap$rs)
+
+# Repair column names and sort numerically
+i1 <- grep("X\\d+", names(Hap))
+nm1 <- mixedsort(names(Hap)[i1])
+Hap <- Hap[c(setdiff(names(Hap), nm1), nm1)]
+write.table(Hap, file = "sorted_hapmap_file", quote = FALSE, row.names = FALSE)
+
+# Go to terminal and convert sorted hapmap file to plink file (bed)
+
+# Plot Rice Genetic Data
+# rice.pca <- pcadapt::read.pcadapt("rice.bed", type = "bed")
+# Choose the number of k
+# x <- pcadapt::pcadapt(input = rice.pca, K = 20)
+# summary(x)
+# plot(x, option = "screeplot")
+
+gsor_ID <- read.csv("minicore_gsor.csv", header = TRUE)
+gsor_ID <- gsor_ID %>%
+  dplyr::select("Accession.Number","Taxon","Country","Subpop")
+
+#Remove X from column names
+names(Hap) <- sub("^X", "", names(Hap))
+
+remove <- setdiff(gsor_ID$Accession.Number, names(Hap[,12:222]))
+
+gsor_ID <- gsor_ID %>% 
+  dplyr::filter(!Accession.Number %in% c(310399,310442,310901,310997,311046,311787))
+
+# Remove empty rows
+# gsor_ID <- gsor_ID[-c(212:215), ]
+
+#-------------------------------------------------------------------------------------
+
+# Read in phenotype data
+myY <- read.table("Phenotypes.txt")
+# myY <- myY[,-15]
+
+# myY <- myY %>%
+ # dplyr::rename(Taxa = measurementlabel) 
+
+# myY <- as.big.matrix(myY) 
+
+# myY$Taxa <- myY$GSOR
+# myY$GSOR <- NULL
+
+
+# Read in hapmap SNP data and remove GSOR for unscanned seeds
+Hap <- read.table("1-s2.0-S0168945221001035-mmc1.txt", header = T) #%>%
+ # dplyr::select(-14, -15, -20)
+
+#-------------------------------------------------------------------------------------
+# Clean up genetic data
+
+HapMap <- read.table("usda_hapmap.hmp.txt", fill =T, header = F) %>%
+  dplyr::filter(!row_number() %in% 1)
+
+names(HapMap) <- names(Hap)
+
+HapMap <- HapMap %>%
+  dplyr::select(-14, -15, -20)
+
+# Remove unwanted spaces and commas from hapmap data
+HapMap <- as.data.frame(apply(HapMap,2,function(x)gsub('\\s+', '',x)))
+HapMap$rs <- gsub(",","",HapMap$rs)
+
+# Repair column names and sort numerically
+i1 <- grep("X\\d+", names(HapMap))
+nm1 <- mixedsort(names(HapMap)[i1])
+HapMap <- HapMap[c(setdiff(names(HapMap), nm1), nm1)]
+
+#Remove X from column names
+names(HapMap) <- sub("^X", "", names(HapMap))
+
+
+remove_hap <- setdiff(names(HapMap[,12:219]), myY$Taxa) #Phenotypes in HapMap file not in my phenotypes ("310039" "310156" "310337" "310338" "310494" "310503" "310598" "310615" "310702" "310723" "310747" "310799" "310801" "310887" "310910" "310950" "311173" "311180" "311269" "311281" "311383" "311586" "311600" "311669" "311688" "311689" "311691" "311693" "311694" "311695" "311697" "311698" "311699" "311702" "311703" "311725")
+
+remove_pheno <- setdiff(myY$Taxa, names(HapMap[,12:219])) #My phenotypes not in HapMap file #None
+
+# Remove Phenotypes not present in HapMap
+#drop <- c("310039","310156","310219","310337","310338","310494","310503","310598","310615","310702","310723","310724","310747","310799","310801","310887","310910","310950","310958","311173","311180","311206","311269","311281","311327","311383","311586","311600","311669","311688","311689","311691","311693","311694","311695","311697","311698","311699","311702","311703","311725","311769")
+
+HapMap <- HapMap %>% 
+  dplyr::select(-one_of(remove_hap))
+
+# Remove phenotypes without genetic data from phenotype file
+myY <- myY %>%
+  dplyr::filter(!Taxa %in% remove_pheno)
+
+# Check if phenotype taxa names correspond to genotype(HapMap) taxa names
+# Change measurement label to GSOR numbers 
+myY$Taxa == names(HapMap[,12:181]) #FALSE
+
+# Check HapMap columns correspond to Phenotypes GSOR numbers 
+# g <- colnames(HapMap[, 12:199])
+# h <- all.seeds.MEAN$GSOR
+
+# Save map data to system
+# write.csv(Map, file = "Map.txt", row.names = FALSE)
+
+write.table(myY, file = "Phenotypes.txt", quote = FALSE, row.names = FALSE)
+
+# myY <- read.table("Phenotypes.txt", header = TRUE)
+
+# Save edited HapMap file to system
+write.table(HapMap, file = "HapMap.txt", quote = FALSE, row.names = FALSE)
+
+myG <- read.table("HapMap.txt", header = FALSE)
+
+# Run GAPIT to generate numerical genotype output 
+# myGAPIT <- GAPIT(G=myG, output.numerical=TRUE)
+
+#GWAS
+#Step 1: Run GAPIT
+myGAPIT2 <- GAPIT(
+  Y=myY[, c(1,4:10)],
+  G=myG,
+  PCA.total = 3,
+  model = "MLM"
+  #group.from = 189,
+  #group.to = 189,
+  #group.by = 1
+)
+
+#Step 2: Run GAPIT using MLM, MLMM, and FarmCPU models
+
+#Load numerical genotype, map data, kinship, and covariate files
+
+myGD <- read.table("GAPIT.Genotype.Numerical.txt", head = TRUE)
+
+myGM <- read.table("GAPIT.Genotype.map.txt", head = TRUE)
+
+write.table(GAPIT_Genotype_Kin_Zhang, file = "Kinship.txt", quote = FALSE, row.names = FALSE)
+write.table(GAPIT_Genotype_PCA, file = "PCA.txt", quote = FALSE, row.names = FALSE)
+
+
+myKI <- read.table("Kinship.txt", head = FALSE)
+#myCV <- read.table("PCA.txt", head = TRUE)
+
+
+myGAPIT3 <- GAPIT(
+Y=myY[,c(1,3)], #first column is ID
+G=myG,
+#KI=myKI,
+PCA.total = 3,
+cutOff = 0.01,
+# SNP.FDR = 0.9,
+model=c("MLM","MLMM","FarmCPU"),
+# perform interactive plot
+Multiple_analysis=TRUE,
+file.output=T
+)
+
+# FarmCPU.P.Threshold(
+# Y=myY, #only two columns allowed, the first column is taxa name and the second is phenotype value
+# GD=myGD,
+# GM=myGM,
+# trait="trait_name", #name of the trait, only used for the output file name
+# theRep=100 #number of permutation times
+# )
+
+
+```
