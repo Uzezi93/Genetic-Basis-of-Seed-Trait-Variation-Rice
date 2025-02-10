@@ -101,7 +101,7 @@
   <strong>B.</strong> OsSIS7 is highly expressed in young seeds (S1 and S2 stage)
 </p>
 
-<p>We are currently exploring the relationship between the haplotype fitness these identified genes and bioclimatic factors using multivariate analysis (Fig. 7). This will help infer how genotype-by-environment (GxE) interactions drive seed trait variation in *O. sativa*. Climate data for rice-growing regions will be retrieved from the BIOCLIM dataset, and we are using the <a href="https://iric.irri.org/projects/3000-rice-genomes-project" target="_blank">3K rice genome dataset</a> for our haplotype analysis.</p>
+<p>We are currently exploring the relationship between the haplotype fitness these identified genes and bioclimatic factors using multivariate analysis (Fig. 7). This will help infer how genotype-by-environment (GxE) interactions drive seed trait variation in <i>O. sativa</i>. Climate data for rice-growing regions will be retrieved from the BIOCLIM dataset, and we are using the <a href="https://iric.irri.org/projects/3000-rice-genomes-project" target="_blank">3K rice genome dataset</a> for our haplotype analysis.</p>
 
 <p align="center">
     <img src="USDA_minicore/GWAS/Haplotype_Analysis/GxE_Method.png" alt="Fig 7. PCA" width="1000" height="400">
@@ -216,8 +216,7 @@
   <li>Seed images were converted from pixels to millimeters for   comparability.</li>
   <li>Outlier filtering was applied to remove extreme values due to scanning errors.</li>
   <li>Principal Component Analysis (PCA) was performed to understand trait variation.</li>
-  <li>Pairwise comparisons of traits among subpopulations were conducted using the Emmeans package.</li>
-  <li>Correlation analysis was used to explore relationships between traits.</li>
+  <li>ANOVA was used for pairwise comparisons of traits among subpopulations.</li>
   </ul>
   
 <p><h4>Question 2: Genomic Regions Associated with Seed Traits
@@ -226,7 +225,7 @@ Genome-Wide Association Study (GWAS)</h4></p>
   <ul>
   <li>Conducted GWAS using 40,866 high-density SNP markers.</li>
   <li>Used MLM, MLMM, and FarmCPU models in R GAPIT to identify significant SNPs (FDR ≤ 0.05).</li>
-  <li>Chromosomes 3, 7, 8, and 9 were associated with seed traits.
+  <li>Four SNPs on chromosomes 3, 7, 8, and 9 were associated with seed traits.
   <li>Linkage Disequilibrium (LD) decay analysis was performed using PLINK 2.0 to determine mapping resolution.</li>
   </ul>
 
@@ -235,9 +234,9 @@ Candidate Gene Identification</h4></p>
 
   <ul>
   <li>Genes within a 1 MB LD window surrounding significant SNPs were identified using the MSUv7 Nipponbare genome.</li>
-  <li>Spatiotemporal expression data from the Rice ePlant database was used to infer functional relevance.</li>
+  <li>Spatiotemporal expression data from the <a href="https://bar.utoronto.ca/eplant_rice/" target="_blank">Rice ePlant</a> database was used to infer functional relevance.</li>
   <li>Conducted haplotype analysis on seed trait genes using the 3K Rice Genome dataset.</li>
-  <li>SNP data was retrieved from SNPseek, with haplotypes.</li>
+  <li>SNP data was retrieved from <a href="https://snp-seek.irri.org" target="_blank">SNP-seek</a>, with haplotypes.</li>
   <li>R pegas package was used to construct haplotype networks.</li>
   </ul>
 
@@ -296,6 +295,14 @@ Candidate Gene Identification</h4></p>
             USDA ARS. (2023). Germplasm Resources Information Network (GRIN).
         </a>
     </li>
+    <li>
+        <a href="https://bar.utoronto.ca/eplant_rice/" target="_blank">
+            University of Toronto. (2023). Rice ePlant: A visualization tool for rice gene expression.
+        </a>
+    </li>
+    <li>
+        <a href="https://snp-seek.irri.org" target="_blank">
+            SNP-Seek Database. (2023). A genomic variation database for rice.
+        </a>
+    </li>
 </ul>
-
-  
