@@ -252,7 +252,7 @@ Candidate Gene Identification</h4></p>
 
 <ul>
   <li>Investigate how haplotypes interact with climatic and agroecological variables to shape seed traits.</li>
-  <li>Climate data will be retrieved from BIOCLIM, using landrace locations from the Genesys database.</li>
+  <li>Climate data will be retrieved from <a href="https://www.worldclim.org/data/bioclim.html#google_vignette" target="_blank">BIOCLIM</a>, using landrace locations from the Genesys database.</li>
   <li>Multivariate analysis will explore haplotype-by-environment interactions driving seed trait variation in <i>O. sativa</i>.</li>
   </ul>
 
